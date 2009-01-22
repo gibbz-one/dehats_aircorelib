@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="206" height="154"
+	creationComplete=" start()"
+	enterFrame="onEnterFrame()" backgroundColor="#FFFFFF">
+
+	<mx:Script>
+		<![CDATA[
+			
+
+			[Bindable]
+			private var startMem:int = 0;
+			
+			[Bindable]
+			private var maxMem:int = 0;
+
+			[Bindable]
+			private var currentMem:int;
+
+			[Bindable]
+			private var afterGC:int;
+
+			[Bindable]
+			private var dif:int;
+			
+			private var gcTimer:Timer;
+
+			public function start():void
+			{
+				
+				startMem = System.totalMemory ;
+/*				
+				gcTimer = new Timer(5000);
+				gcTimer.addEventListener(TimerEvent.TIMER, forceGC);
+				gcTimer.start();
+*/				
+			}
+			
+			
+			private function onEnterFrame():void
+			{
+				
+				currentMem = System.totalMemory ;
+				if(currentMem> maxMem) maxMem = currentMem ;
+				if( startMem == 0 && currentMem>0) startMem = currentMem ;
+								
+			}
+			
+			public function forceGC(pEvt:TimerEvent=null):void
+			{
+				System.gc();
+				System.gc();
+
+				dif =  System.totalMemory - afterGC;
+				afterGC = System.totalMemory ;
+			}
+			
+			
+		]]>
+	</mx:Script>
+
+	<mx:Form x="0" y="0" paddingTop="4" paddingBottom="4" paddingLeft="4" paddingRight="4">
+		<mx:FormItem label="Start Memory">
+			<mx:Label text="{ startMem}"/>
+		</mx:FormItem>
+		<mx:FormItem label="Max Memory">
+			<mx:Label text="{ maxMem}"/>
+		</mx:FormItem>
+		<mx:FormItem label="Current Memory">
+			<mx:Label text="{ currentMem}"/>
+		</mx:FormItem>
+		<mx:FormItem label="After last GC">
+			<mx:Label text="{ afterGC }"/>
+		</mx:FormItem>
+		<mx:FormItem label="Difference">
+			<mx:Label text="{ dif}"/>
+		</mx:FormItem>
+		<mx:Button label="Call Garbage Collector" click=" forceGC()"/>
+	</mx:Form>	
+</mx:Canvas>
