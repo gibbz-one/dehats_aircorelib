@@ -225,12 +225,6 @@ package com.dehats.air.sqlite
 			var rawSQL:String = pTable.sql;
 			var defsArray:Array = rawSQL.match(/\(.*/g);
 			var defs:String= defsArray[0];
-/*			
-			// bad regexp used till 1.1 - kept for record
-			var regExp:RegExp = new RegExp(", "+pColName+"[^,]*", "g");
-			defs = defs.replace(regExp, "");
-			defs+=")";
-*/
 
 			var regExp:RegExp = new RegExp("[(,]\\s*"+pColName+"[^,)]*", "g");
 			defs = defs.replace(regExp, "");
@@ -261,7 +255,16 @@ package com.dehats.air.sqlite
 			return null;
 		}
 		
-		// INDEXES
+		private function getTablePKName(pTable:SQLTableSchema):String
+		{			
+			var pk:SQLColumnSchema = getTablePK(pTable);
+
+			if(pk!=null) return pk.name;
+			
+			return "rowid";
+		}
+		
+		// INDICES
 
 		/**
 		 * 
@@ -296,8 +299,8 @@ package com.dehats.air.sqlite
 		
 		public function getTableRecords(pTable:SQLTableSchema):Array
 		{
-			var res:SQLResult = executeStatement("SELECT * FROM "+pTable.name);				
-			return res.data ;			
+			var res:SQLResult = executeStatement("SELECT rowid AS rowid,* FROM "+pTable.name);				
+			return res.data ;
 		}
 
 
@@ -313,27 +316,22 @@ package com.dehats.air.sqlite
 				var col:SQLColumnSchema = pTable.columns[i] as SQLColumnSchema;
 				if( ! col.primaryKey)
 				{					
-//					if( pVo[ col.name] is String) 
-//					{
-						sql+= col.name + " = @p"+i;
-						params["@p"+i] = pVo[ col.name];
-//					}
-//					else  sql+= col.name	+" = "+pVo[ col.name];
+					sql+= col.name + " = @p"+i;
+					params["@p"+i] = pVo[ col.name];
 					
 					if(i!=pTable.columns.length-1) sql+=", ";	
 				}
 									
 			}				
+
+			// old method using getTablePKName
+			/*
+			var pkName:String = getTablePKName(pTable);
+			sql+=" WHERE "+ pkName +" = '"+ pOldRecord[pkName] +"'";
+			*/
 			
-			var pk:SQLColumnSchema = getTablePK(pTable);
-
-			if(pk==null)
-			{
-				Alert.show("Couldn't find a primary key for this table", "Error");
-				return;
-			}
-
-			sql+=" WHERE "+ pk.name +" = '"+ pOldRecord[pk.name] +"'";
+			// new method using rowid, faster and more secure
+			sql+=" WHERE rowid ="+ pOldRecord["rowid"] ;
 			
 			executeStatement(sql, params);
 			
@@ -433,16 +431,14 @@ package com.dehats.air.sqlite
 		public function deleteRecord(pTable:SQLTableSchema, pRecord:Object):void
 		{
 			var sql:String = "DELETE FROM " + pTable.name ;
-
-			var pk:SQLColumnSchema = getTablePK(pTable);
 			
-			if(pk==null)
-			{
-				Alert.show("Couldn't find a primary key for this table", "Error");
-				return;
-			}
-
-			sql+=" WHERE "+ pk.name +" = '"+ pRecord[pk.name] +"'";
+			// old method
+			/*
+			var pkName:String = getTablePKName(pTable);
+			sql+=" WHERE "+ pkName +" = '"+ pRecord[pkName] +"'";
+			*/
+			// new method using rowid
+			sql+=" WHERE rowid ="+ pRecord["rowid"] ;
 			
 			executeStatement(sql);
 			
@@ -454,8 +450,5 @@ package com.dehats.air.sqlite
 			return res.data ;			
 		}
 		
-		
-
-
 	}
 }
