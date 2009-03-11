@@ -326,7 +326,13 @@ package com.dehats.air.sqlite
 			}				
 			
 			var pk:SQLColumnSchema = getTablePK(pTable);
-			
+
+			if(pk==null)
+			{
+				Alert.show("Couldn't find a primary key for this table", "Error");
+				return;
+			}
+
 			sql+=" WHERE "+ pk.name +" = '"+ pOldRecord[pk.name] +"'";
 			
 			executeStatement(sql, params);
@@ -429,6 +435,12 @@ package com.dehats.air.sqlite
 			var sql:String = "DELETE FROM " + pTable.name ;
 
 			var pk:SQLColumnSchema = getTablePK(pTable);
+			
+			if(pk==null)
+			{
+				Alert.show("Couldn't find a primary key for this table", "Error");
+				return;
+			}
 
 			sql+=" WHERE "+ pk.name +" = '"+ pRecord[pk.name] +"'";
 			
