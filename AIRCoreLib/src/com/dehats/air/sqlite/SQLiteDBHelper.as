@@ -408,17 +408,23 @@ package com.dehats.air.sqlite
 			{
 				var col:SQLColumnSchema = pTable.columns[i] as SQLColumnSchema;
 				colDefs.push(col.name);
-					
-				if(pRec[ col.name] is String)
-				{
-					var value:String = pRec[ col.name];
+				
+				var value = pRec[ col.name];
+				
+				if(value is String)
+				{					
 					// we need to escape simple quotes
 					var reg:RegExp = new RegExp("'", "gi");
 					value = value.replace(reg, "\\'");
 					colValues.push("'"+value+"'");
 				} 
-				else if(pRec[ col.name] is XML || pRec[ col.name] is XMLList) colValues.push((pRec[ col.name] as XML).toXMLString());
-				else colValues.push((pRec[ col.name]).toString());
+				else if(value is XML || value is XMLList) colValues.push((value as XML).toXMLString());
+				else{
+					
+					if(value==null) colValues.push("null");	
+					else colValues.push(value.toString());					
+					
+				} 
 					
 			}				
 
