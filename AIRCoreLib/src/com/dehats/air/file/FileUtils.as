@@ -43,10 +43,10 @@ package com.dehats.air.file
 		public static function writeTextInFile(pFile:File, pText:String, pEncoding:String="utf-8"):void
 		{
 			// Replace line ending character with the appropriated one
-			var t:String = pText.replace(/[\r|\n]/g, File.lineEnding);			
+			//var t:String = pText.replace(/[\r|\n]/g, File.lineEnding);			
 			var stream:FileStream = new FileStream();			
 			stream.open(pFile, FileMode.WRITE);			
-			stream.writeMultiByte(t, pEncoding);			
+			stream.writeMultiByte(pText, pEncoding);			
 			stream.close();			
 		}
 		
