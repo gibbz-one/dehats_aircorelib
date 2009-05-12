@@ -409,7 +409,7 @@ package com.dehats.air.sqlite
 				var col:SQLColumnSchema = pTable.columns[i] as SQLColumnSchema;
 				colDefs.push(col.name);
 				
-				var value = pRec[ col.name];
+				var value:Object = pRec[ col.name];
 				
 				if(value is String)
 				{					

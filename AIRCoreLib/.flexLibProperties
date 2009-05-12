@@ -3,6 +3,9 @@
 <includeClasses>
 <classEntry path="com.dehats.air.AppWinManager"/>
 <classEntry path="com.dehats.air.DeclarativeMenu"/>
+<classEntry path="com.dehats.air.IAppManager"/>
+<classEntry path="com.dehats.air.LicenseManager"/>
+<classEntry path="com.dehats.air.NativeAppBase"/>
 <classEntry path="com.dehats.air.NotificationWin"/>
 <classEntry path="com.dehats.air.file.FileUtils"/>
 <classEntry path="com.dehats.air.sqlite.SQLType"/>
