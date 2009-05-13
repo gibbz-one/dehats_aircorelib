@@ -45,12 +45,15 @@ package com.dehats.air
 		{
 			nativeApp =pNativeApp;
 			nativeApp.addEventListener(InvokeEvent.INVOKE, onInvoke);
+			nativeApp.addEventListener(Event.EXITING, onExiting);
+			
 			nativeMenu =  pNativeMenu;
 
 			var ns:Namespace = new Namespace(nativeApp.applicationDescriptor.namespaceDeclarations()[0]);
 			appName = nativeApp.applicationDescriptor.ns::name;
 			appVersion = nativeApp.applicationDescriptor.ns::version;
 			
+			manager = pManager;
 			updaterConfigLocation = pUpdaterFileLoc;
 						
 			forceUpdates = pForceUpdate;
@@ -61,13 +64,16 @@ package com.dehats.air
 		{
 						
 			nativeWin = (nativeApp.openedWindows[0] as NativeWindow);
+			
 			nativeWin.addEventListener(Event.CLOSING, onClosing);			
-			nativeApp.menu = nativeWin.menu= nativeMenu
+			
+			if(nativeMenu) nativeApp.menu = nativeWin.menu= nativeMenu;
 			
 			if(keepSizeAndPos) readPosAndSize();
 			else centerWindow();
-			
+		
 			initializeUpdater();			
+			
 		}
 
 		// updater
@@ -121,20 +127,30 @@ package com.dehats.air
 		
 		private function onClosing(pEvt:Event):void
 		{
-			pEvt.preventDefault();			
+			pEvt.preventDefault();	
 			
 			manager.tryClosing();
 			
 		}
 		
 		public function closeApp():void
-		{			
+		{	
 			if(keepSizeAndPos) savePosAndSize(nativeWin.x, nativeWin.y, nativeWin.width, nativeWin.height);
 			
 			nativeApp.exit();
 		}
 		
-		
+
+		// workaround to fix the quit bug on OSX with the update framework			
+		private function onExiting(pEvt:Event):void
+		{
+			var opened:Array = nativeApp.openedWindows;
+			for (var i:int = 0; i < opened.length; i ++) {
+				opened[i].close();
+			}
+
+		}
+					
 		// Size and pos
 		
 		public function centerWindow():void
@@ -167,6 +183,7 @@ package com.dehats.air
 		
 		private function savePosAndSize(pX:int, pY:int, pWidth:int, pHeight:int):void
 		{
+			
 			var xPosBytes:ByteArray = new ByteArray();
 			xPosBytes.writeInt(pX);
 
