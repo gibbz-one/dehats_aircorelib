@@ -18,19 +18,22 @@ package com.dehats.air
 	public class NativeAppBase extends EventDispatcher
 	{
 
+		public static const EVENT_LAUNCH:String="launch";
+		public static const EVENT_CLOSING:String="closing";
+		
 		private static const ELSITEM_LAST_X:String="lastX";
 		private static const ELSITEM_LAST_Y:String="lastY";
 		private static const ELSITEM_LAST_WIDTH:String="lastWidth";
 		private static const ELSITEM_LAST_HEIGHT:String="lastHeight";
 
 		public var nativeApp:NativeApplication;
+		public var parameters:Array;
 		public var appName:String;
 		public var appVersion:String;
 		
 		private var updaterConfigLocation:String;		
 		private var nativeWin:NativeWindow;
 		private var nativeMenu:NativeMenu;
-		private var manager:IAppManager;
 		private var firstInvocation:Boolean=true;
 		private var updater:ApplicationUpdaterUI = new ApplicationUpdaterUI();
 		private var forceUpdates:Boolean;
@@ -41,7 +44,7 @@ package com.dehats.air
 		private var lastHeight:int;
 
 		
-		public function NativeAppBase(pNativeApp:NativeApplication, pManager:IAppManager, pNativeMenu:NativeMenu=null, pForceUpdate:Boolean=false, pKeepSizeAndPos:Boolean=true,  pUpdaterFileLoc:String="app:/updaterConfig.xml")
+		public function NativeAppBase(pNativeApp:NativeApplication, pNativeMenu:NativeMenu=null, pForceUpdate:Boolean=false, pKeepSizeAndPos:Boolean=true,  pUpdaterFileLoc:String="app:/updaterConfig.xml")
 		{
 			nativeApp =pNativeApp;
 			nativeApp.addEventListener(InvokeEvent.INVOKE, onInvoke);
@@ -53,7 +56,6 @@ package com.dehats.air
 			appName = nativeApp.applicationDescriptor.ns::name;
 			appVersion = nativeApp.applicationDescriptor.ns::version;
 			
-			manager = pManager;
 			updaterConfigLocation = pUpdaterFileLoc;
 						
 			forceUpdates = pForceUpdate;
@@ -67,7 +69,7 @@ package com.dehats.air
 			
 			nativeWin.addEventListener(Event.CLOSING, onClosing);			
 			
-			if(nativeMenu) nativeApp.menu = nativeWin.menu= nativeMenu;
+			activateMenu();
 			
 			if(keepSizeAndPos) readPosAndSize();
 			else centerWindow();
@@ -98,7 +100,7 @@ package com.dehats.air
 			if( pEvt.available)
 			{
 				// Forces updates by hiding the main window if an update is available
-				if(forceUpdates) nativeApp.activeWindow.visible = false;
+				if(forceUpdates && nativeApp.activeWindow!=null) nativeApp.activeWindow.visible = false;
 			}
 		}
 
@@ -111,16 +113,26 @@ package com.dehats.air
 		
 		private function onInvoke(pEvt:InvokeEvent):void
 		{
-
+			trace("invoke")
 			// Check if the invocation corresponds to the app launch 
 			if(firstInvocation )
-			{					
-				manager.launchApp(pEvt.arguments);	
-				
-				firstInvocation=false;
+			{
+				parameters = pEvt.arguments;
+				dispatchEvent( new Event(EVENT_LAUNCH));				
+				firstInvocation=false;								
 			}
 			
-		}				
+		}	
+		
+		private function activateMenu():void
+		{
+			// warning : this sets the window to visible=true
+			if(nativeMenu)
+			{
+				if(NativeWindow.supportsMenu) nativeWin.menu= nativeMenu;
+				if(NativeApplication.supportsMenu)  nativeApp.menu = nativeMenu;
+			}	
+		}			
 
 
 		// Closing
@@ -128,14 +140,15 @@ package com.dehats.air
 		private function onClosing(pEvt:Event):void
 		{
 			pEvt.preventDefault();	
-			
-			manager.tryClosing();
-			
+			dispatchEvent( new Event(EVENT_CLOSING));			
 		}
 		
 		public function closeApp():void
 		{	
 			if(keepSizeAndPos) savePosAndSize(nativeWin.x, nativeWin.y, nativeWin.width, nativeWin.height);
+			
+			// Only to test first install !!
+			//EncryptedLocalStore.reset();
 			
 			nativeApp.exit();
 		}
@@ -165,7 +178,11 @@ package com.dehats.air
 			var widthBytes:ByteArray = EncryptedLocalStore.getItem(ELSITEM_LAST_WIDTH);
 			var heightBytes:ByteArray =  EncryptedLocalStore.getItem(ELSITEM_LAST_HEIGHT);
 			
-			if(xPosBytes==null) centerWindow();
+			if(xPosBytes==null || yPosBytes==null || widthBytes==null || heightBytes==null)
+			{
+				centerWindow();
+				return;
+			} 
 			
 			setWindow(xPosBytes.readInt(), yPosBytes.readInt(), widthBytes.readInt(), heightBytes.readInt());
 		}
@@ -177,7 +194,6 @@ package com.dehats.air
 			
 			if(pWidth) nativeWin.width = pWidth;
 			if(pHeight) nativeWin.height = pHeight;
-			
 		}
 		
 		
@@ -199,7 +215,7 @@ package com.dehats.air
 			EncryptedLocalStore.setItem( ELSITEM_LAST_X, xPosBytes  );		
 			EncryptedLocalStore.setItem( ELSITEM_LAST_Y,  yPosBytes );		
 			EncryptedLocalStore.setItem( ELSITEM_LAST_WIDTH, widthBytes);		
-			EncryptedLocalStore.setItem( ELSITEM_LAST_HEIGHT, heightBytes );			
+			EncryptedLocalStore.setItem( ELSITEM_LAST_HEIGHT, heightBytes );	
 		}
 		
 		

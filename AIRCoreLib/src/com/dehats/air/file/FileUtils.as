@@ -8,7 +8,7 @@ package com.dehats.air.file
 	{
 		
 		
-		public static function getFileString(file:File, pEncoding:String="utf-8"):String
+		public static function getFileString(file:File, pEncoding:String="utf-8", pConvertEOL:Boolean=true):String
 		{
 			//var file:File = File.desktopDirectory.resolvePath(pPath);
 			
@@ -20,30 +20,37 @@ package com.dehats.air.file
 			
 			stream.close();
 			
+			if(pConvertEOL) str = str.replace(/\r\n/g, "\n");
+			
 			return str;
 		}
 		
 		
-		public static function createFileFromString(pPath:String, pText:String, pEncoding:String="utf-8"):File
+		public static function createFileFromString(pPath:String, pText:String, pEncoding:String="utf-8", pConvertEOL:Boolean=true):File
 		{
 			var file:File =  new File(pPath);			
-			writeTextInFile(file, pText, pEncoding);			
+			writeTextInFile(file, pText, pEncoding, pConvertEOL);			
 			return file;
 		}
 		
-		public static function createTmpFileFromString(pName:String, pText:String, pEncoding:String="utf-8"):File
+		public static function createTmpFileFromString(pName:String, pText:String, pEncoding:String="utf-8", pConvertEOL:Boolean=true):File
 		{
 
 			var file:File = File.createTempDirectory().resolvePath(pName);
-			writeTextInFile(file, pText, pEncoding);
+			writeTextInFile(file, pText, pEncoding, pConvertEOL);
 			return file;
 
 		}	
 		
-		public static function writeTextInFile(pFile:File, pText:String, pEncoding:String="utf-8"):void
+		public static function writeTextInFile(pFile:File, pText:String, pEncoding:String="utf-8", pConvertEOL:Boolean=true):void
 		{
-			// Replace line ending character with the appropriated one
-			//var t:String = pText.replace(/[\r|\n]/g, File.lineEnding);			
+			// Replace line ending character with the appropriate one
+			if(pConvertEOL)
+			{
+				pText = pText.replace(/\r\n/g, "\n");
+				pText = pText.replace(/\n/g, File.lineEnding);
+			}
+			
 			var stream:FileStream = new FileStream();			
 			stream.open(pFile, FileMode.WRITE);			
 			stream.writeMultiByte(pText, pEncoding);			

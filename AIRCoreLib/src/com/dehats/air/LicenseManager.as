@@ -35,8 +35,8 @@ package com.dehats.air
 			
 			urlLoader.addEventListener(Event.COMPLETE, onRegistrationAttemptComplete);
 			urlLoader.addEventListener(IOErrorEvent.IO_ERROR, onRegistrationAttemptFailure);			
-			urlLoader.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onRegistrationAttemptFailure);			
-			
+			urlLoader.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onRegistrationAttemptFailure);		
+						
 		}
 
 		public function checkLicense():Boolean
