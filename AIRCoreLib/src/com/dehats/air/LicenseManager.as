@@ -63,19 +63,23 @@ package com.dehats.air
 		}
 		
 		// Dev only : should never be used in production
+/* 		
 		private function removeLicensingInfo():void
 		{
 			EncryptedLocalStore.removeItem(ELSITEM_LICENSE);
 		}
 		
-		
-		public function registerLicense(pLicense:String):void
+ */
+ 
+ 		
+		public function registerLicense(pLicense:String, pProductCode:String):void
 		{
 			tmpKey = pLicense;
 			var req:URLRequest = new URLRequest(registrationScriptURL);
 			req.method = URLRequestMethod.POST;
 			var variables:URLVariables = new URLVariables();
-			variables.license = pLicense;			
+			variables.license = pLicense;
+			variables.productCode = pProductCode;			
 			req.data = variables;
 			
 			urlLoader.load(req);
@@ -84,7 +88,6 @@ package com.dehats.air
 		private function onRegistrationAttemptComplete(pEvent:Event):void
 		{
 			var response:String = new String (urlLoader.data);
-			trace( "registration response:"+response);
 			
 			if(response=="valid")
 			{

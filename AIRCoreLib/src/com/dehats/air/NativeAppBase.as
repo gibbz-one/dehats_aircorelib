@@ -19,6 +19,7 @@ package com.dehats.air
 	{
 
 		public static const EVENT_LAUNCH:String="launch";
+		public static const EVENT_SUBS_INVOKE:String="subsequentInvoke";
 		public static const EVENT_CLOSING:String="closing";
 		
 		private static const ELSITEM_LAST_X:String="lastX";
@@ -76,6 +77,7 @@ package com.dehats.air
 		
 			initializeUpdater();			
 			
+			//nativeWin.title += nativeWin.x +", "+nativeWin.y+" "+nativeWin.width+"*"+nativeWin.height;
 		}
 
 		// updater
@@ -113,13 +115,16 @@ package com.dehats.air
 		
 		private function onInvoke(pEvt:InvokeEvent):void
 		{
-			trace("invoke")
 			// Check if the invocation corresponds to the app launch 
 			if(firstInvocation )
 			{
 				parameters = pEvt.arguments;
 				dispatchEvent( new Event(EVENT_LAUNCH));				
 				firstInvocation=false;								
+			}
+			else
+			{
+				dispatchEvent( new Event(EVENT_SUBS_INVOKE));				
 			}
 			
 		}	
@@ -168,6 +173,9 @@ package com.dehats.air
 		
 		public function centerWindow():void
 		{
+			nativeWin.width = nativeWin.minSize.x;
+			nativeWin.height = nativeWin.minSize.y;
+			
 			setWindow((Capabilities.screenResolutionX - nativeWin.width) / 2, (Capabilities.screenResolutionY - nativeWin.height) / 2);
 		}
 
@@ -185,6 +193,8 @@ package com.dehats.air
 			} 
 			
 			setWindow(xPosBytes.readInt(), yPosBytes.readInt(), widthBytes.readInt(), heightBytes.readInt());
+			
+		
 		}
 		
 		private function setWindow(pX:int, pY:int, pWidth:int=0, pHeight:int=0):void
@@ -194,6 +204,10 @@ package com.dehats.air
 			
 			if(pWidth) nativeWin.width = pWidth;
 			if(pHeight) nativeWin.height = pHeight;
+
+			if(nativeWin.width < nativeWin.minSize.x) nativeWin.width = nativeWin.minSize.x;
+			if(nativeWin.height < nativeWin.minSize.y) nativeWin.height = nativeWin.minSize.y;
+			
 		}
 		
 		
