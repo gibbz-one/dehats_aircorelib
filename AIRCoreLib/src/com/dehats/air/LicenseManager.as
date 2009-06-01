@@ -18,24 +18,39 @@ package com.dehats.air
 		public static const EVENT_REGISTRATION_FAILURE:String="failure";
 		public static const EVENT_REGISTRATION_ERROR:String="error";
 
+		public static const EVENT_UNREGISTRATION_SUCCESSFULL:String="unregisterSuccess";
+		public static const EVENT_UNREGISTRATION_FAILURE:String="unregisterFailure";
+		public static const EVENT_UNREGISTRATION_ERROR:String="unregisterError";
+
 		public static const ELSITEM_LICENSE:String="license";
 
 		public var license:String;
 		
-		private var urlLoader:URLLoader;
+		private var productCode:String;
 		private var tmpKey:String;
+		private var registerUrlLoader:URLLoader;		
 		private var registrationScriptURL:String;
+		private var unregisterUrlLoader:URLLoader;				
+		private var unregistrationScriptURL:String;
 
 		
-		public function LicenseManager(pRegistrationScriptURL:String)
+		public function LicenseManager(pRegistrationScriptURL:String, pUnregistrationURL:String, pProductCode:String)
 		{
 			registrationScriptURL = pRegistrationScriptURL;
+			unregistrationScriptURL = pUnregistrationURL;
+			productCode = pProductCode;
 			
-			urlLoader = new URLLoader();
+			registerUrlLoader = new URLLoader();
 			
-			urlLoader.addEventListener(Event.COMPLETE, onRegistrationAttemptComplete);
-			urlLoader.addEventListener(IOErrorEvent.IO_ERROR, onRegistrationAttemptFailure);			
-			urlLoader.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onRegistrationAttemptFailure);		
+			registerUrlLoader.addEventListener(Event.COMPLETE, onRegistrationAttemptComplete);
+			registerUrlLoader.addEventListener(IOErrorEvent.IO_ERROR, onRegistrationAttemptFailure);			
+			registerUrlLoader.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onRegistrationAttemptFailure);		
+
+			unregisterUrlLoader = new URLLoader();
+			
+			unregisterUrlLoader.addEventListener(Event.COMPLETE, onUnRegistrationAttemptComplete);
+			unregisterUrlLoader.addEventListener(IOErrorEvent.IO_ERROR, onUnRegistrationAttemptFailure);			
+			unregisterUrlLoader.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onUnRegistrationAttemptFailure);		
 						
 		}
 
@@ -51,43 +66,28 @@ package com.dehats.air
 			else
 			{
 				license = storedValue.readMultiByte( storedValue.bytesAvailable, "UTF-8");
+				trace(license)
 				return true;
 			}
 		}
-		
-		private function saveLicense(pLicense:String):void
-		{
-			var bytes:ByteArray = new ByteArray();
-			bytes.writeMultiByte( pLicense, "UTF-8");
-			EncryptedLocalStore.setItem( ELSITEM_LICENSE, bytes );
-		}
-		
-		// Dev only : should never be used in production
-/* 		
-		private function removeLicensingInfo():void
-		{
-			EncryptedLocalStore.removeItem(ELSITEM_LICENSE);
-		}
-		
- */
  
  		
-		public function registerLicense(pLicense:String, pProductCode:String):void
+		public function registerLicense(pLicense:String):void
 		{
 			tmpKey = pLicense;
 			var req:URLRequest = new URLRequest(registrationScriptURL);
 			req.method = URLRequestMethod.POST;
 			var variables:URLVariables = new URLVariables();
 			variables.license = pLicense;
-			variables.productCode = pProductCode;			
+			variables.productCode = productCode;			
 			req.data = variables;
 			
-			urlLoader.load(req);
+			registerUrlLoader.load(req);
 		}
 		
 		private function onRegistrationAttemptComplete(pEvent:Event):void
 		{
-			var response:String = new String (urlLoader.data);
+			var response:String = new String (registerUrlLoader.data);
 			
 			if(response=="valid")
 			{
@@ -101,11 +101,62 @@ package com.dehats.air
 			}
 			
 		}
+
+		private function saveLicense(pLicense:String):void
+		{
+			var bytes:ByteArray = new ByteArray();
+			bytes.writeMultiByte( pLicense, "UTF-8");
+			EncryptedLocalStore.setItem( ELSITEM_LICENSE, bytes );
+		}
 		
+				
 		private function onRegistrationAttemptFailure(pEvent:Event):void
 		{
 			dispatchEvent( new Event(EVENT_REGISTRATION_ERROR));
 		}
+		
+
+		
+		public function unregister():void
+		{
+			
+			var req:URLRequest = new URLRequest(unregistrationScriptURL);
+			req.method = URLRequestMethod.POST;
+			var variables:URLVariables = new URLVariables();
+			variables.license = license;
+			variables.productCode = productCode;			
+			req.data = variables;
+			
+			unregisterUrlLoader.load(req);
+			
+		}
+
+		private function onUnRegistrationAttemptComplete(pEvent:Event):void
+		{
+			var response:String = new String (unregisterUrlLoader.data);
+			if(response=="valid")
+			{
+				removeLicensingInfo();				
+				dispatchEvent( new Event(EVENT_UNREGISTRATION_SUCCESSFULL));
+			}
+			
+			else
+			{
+				dispatchEvent( new Event(EVENT_UNREGISTRATION_FAILURE));
+			}
+			
+		}
+		
+		private function onUnRegistrationAttemptFailure(pEvent:Event):void
+		{
+			dispatchEvent( new Event(EVENT_UNREGISTRATION_ERROR));
+		}
+
+		private function removeLicensingInfo():void
+		{
+			EncryptedLocalStore.removeItem(ELSITEM_LICENSE);
+		}
+		
 
 	}
 }
