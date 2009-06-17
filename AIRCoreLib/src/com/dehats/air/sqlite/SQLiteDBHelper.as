@@ -43,7 +43,7 @@ package com.dehats.air.sqlite
 		
 		public function executeStatement(pStatement:String, pParams:Object=null):SQLResult
 		{
-			trace( pStatement)
+			trace( pStatement);
 			var createStmt:SQLStatement = new SQLStatement();
 			
 			createStmt.sqlConnection = cnx;

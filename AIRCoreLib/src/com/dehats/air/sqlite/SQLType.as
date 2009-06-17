@@ -4,28 +4,27 @@ package com.dehats.air.sqlite
     public class SQLType
     {
     	
-    	public static const TYPES:Array = [ TEXT, NUMERIC, INTEGER, REAL, DATE, BOOLEAN, XML, XMLLIST, OBJECT, NONE];
+    	public static const STORAGE_TYPES:Array = [ STORAGE_NULL, STORAGE_INTEGER, STORAGE_REAL, STORAGE_TEXT, STORAGE_BLOB,];
+    	public static const AFFINITY_TYPES:Array = [ TEXT, NUMERIC, INTEGER, REAL, DATE, BOOLEAN, XML, XMLLIST, OBJECT, NONE];
 
-        public static const TEXT:String = "TEXT";
-    	
+		// Storage
+        public static const STORAGE_NULL:String = "NULL";    	
+        public static const STORAGE_INTEGER:String = "INTEGER";    	
+        public static const STORAGE_REAL:String = "REAL";    	
+        public static const STORAGE_TEXT:String = "TEXT";    	
+        public static const STORAGE_BLOB:String = "BLOB";    	
+	
+		// Affinities
+        public static const TEXT:String = "TEXT";    	
         public static const NUMERIC:String = "NUMERIC";
-
         public static const INTEGER:String = "INTEGER";
-
         public static const REAL:String = "REAL";
-
-        public static const NONE:String = "NONE";
-        
-        // AIR Specific affinity type (plus string (=text) and number(=real))
-
+        public static const NONE:String = "NONE";        
+        // AIR Specific affinity type (plus string (=text) and number(=real))        
         public static const BOOLEAN:String = "BOOLEAN";
-
         public static const DATE:String = "DATE";
-
         public static const XML:String = "XML";
-
         public static const XMLLIST:String = "XMLLIST";
-
         public static const OBJECT:String = "OBJECT";
 
 
@@ -43,6 +42,7 @@ package com.dehats.air.sqlite
 # If the data type for a column contains any of the strings "REAL", "NUMB", "FLOA", or "DOUB" then the column has REAL/NUMBER affinity.
 # Otherwise, the affinity is NUMERIC.
 */			
+			if(pType==null) return NUMERIC;
 
 			var dataType:String = pType.toLocaleLowerCase();
 			
