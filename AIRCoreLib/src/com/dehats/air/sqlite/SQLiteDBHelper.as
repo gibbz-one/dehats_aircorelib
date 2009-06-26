@@ -10,6 +10,7 @@ package com.dehats.air.sqlite
 	import flash.errors.SQLError;
 	import flash.filesystem.File;
 	import flash.utils.ByteArray;
+	import flash.utils.getTimer;
 	
 	import mx.controls.Alert;
 	
@@ -17,7 +18,9 @@ package com.dehats.air.sqlite
 	{
 		
 		private var cnx:SQLConnection;
-			
+		
+		[Bindable]
+		public var lastExecutionTime:int=0;
 		
 		public function SQLiteDBHelper()
 		{
@@ -43,7 +46,8 @@ package com.dehats.air.sqlite
 		
 		public function executeStatement(pStatement:String, pParams:Object=null):SQLResult
 		{
-			trace( pStatement);
+			var beforeMS:int = getTimer();
+			
 			var createStmt:SQLStatement = new SQLStatement();
 			
 			createStmt.sqlConnection = cnx;
@@ -63,6 +67,8 @@ package com.dehats.air.sqlite
 			{
 				Alert.show(error.message+"\n"+error.details+"\nStatement:\n"+pStatement, "Error");
 			}						
+			
+			lastExecutionTime = getTimer()-beforeMS;
 			
 			return createStmt.getResult();
 		}		
@@ -94,7 +100,7 @@ package com.dehats.air.sqlite
 		public function createTable(pTableName:String, pColumns:Array=null):void
 		{
 					
-			var sql:String = "CREATE TABLE IF NOT EXISTS "+ pTableName ;
+			var sql:String = "CREATE TABLE "+ pTableName ;
 			
 			if(pColumns) sql+=" (" + pColumns.join(", ")+")";
 			
