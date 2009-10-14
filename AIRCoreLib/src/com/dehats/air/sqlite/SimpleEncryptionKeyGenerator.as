@@ -67,8 +67,6 @@ package com.dehats.air.sqlite
 			
 			var hashedKey:String = SHA256.computeDigest(bytes);
 			
-			Alert.show(hashedKey, "Hash Key - Please note that down somewhere safe !");
-			
 			var encryptionKey:ByteArray = generateEncryptionKey(hashedKey);
 			
 			return encryptionKey;
