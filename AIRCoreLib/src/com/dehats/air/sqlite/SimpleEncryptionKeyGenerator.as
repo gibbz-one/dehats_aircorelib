@@ -8,7 +8,7 @@ package com.dehats.air.sqlite
 
 	/**
 	 * 
-	 * @author davidderaedt
+	 * @author Paul Robertson, davidderaedt
 	 * 
 	 * This class is a simplified version of Paul Roberston's
 	 * EncryptionKeyGenerator.

@@ -37,9 +37,20 @@ package com.dehats.air.sqlite
 
 		}
 		
-		public function reencrypt(pKey:ByteArray):void
+		public function reencrypt(pKey:ByteArray):Boolean
 		{
-			cnx.reencrypt(pKey);
+			var success:Boolean = true;
+			try
+			{
+				cnx.reencrypt(pKey);				
+			}
+			catch (error:SQLError)
+			{
+				success=false;
+				//Alert.show(error.message+"\n"+error.details, "Error");
+			}				
+			
+			return success;
 		}
 		
 		// Main routine
