@@ -2,13 +2,14 @@
 <flexLibProperties version="1">
 <includeClasses>
 <classEntry path="com.dehats.air.LicenseManager"/>
-<classEntry path="com.dehats.air.sqlite.SQLType"/>
 <classEntry path="com.dehats.air.DeclarativeMenu"/>
+<classEntry path="com.dehats.air.sqlite.SQLType"/>
 <classEntry path="com.dehats.air.file.FileUtils"/>
 <classEntry path="com.dehats.air.sqlite.SQLiteDBHelper"/>
 <classEntry path="com.dehats.air.AppWinManager"/>
-<classEntry path="com.dehats.air.sqlite.SimpleEncryptionKeyGenerator"/>
 <classEntry path="com.dehats.air.NativeAppBase"/>
+<classEntry path="com.dehats.air.sqlite.SimpleEncryptionKeyGenerator"/>
+<classEntry path="com.dehats.air.sqlite.EntityManager"/>
 <classEntry path="com.dehats.air.NotificationWin"/>
 </includeClasses>
 <includeResources/>

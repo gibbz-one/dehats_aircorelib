@@ -46,6 +46,8 @@ package com.dehats.air.sqlite
 		
 		public function executeStatement(pStatement:String, pParams:Object=null):SQLResult
 		{
+			trace( pStatement)
+			
 			var beforeMS:int = getTimer();
 			
 			var createStmt:SQLStatement = new SQLStatement();
@@ -320,13 +322,13 @@ package com.dehats.air.sqlite
 			for ( var i:int = 0 ; i < pTable.columns.length ; i++)
 			{
 				var col:SQLColumnSchema = pTable.columns[i] as SQLColumnSchema;
-				if( ! col.primaryKey)
-				{					
+//				if( ! col.primaryKey)
+//				{					
 					sql+= col.name + " = @p"+i;
 					params["@p"+i] = pVo[ col.name];
 					
 					if(i!=pTable.columns.length-1) sql+=", ";	
-				}
+//				}
 									
 			}				
 
@@ -359,8 +361,8 @@ package com.dehats.air.sqlite
 
 				var col:SQLColumnSchema = pTable.columns[i] as SQLColumnSchema;
 				
-				if( ! col.primaryKey)
-				{				
+//				if( ! col.autoIncrement)//primaryKey
+//				{				
 					if(pVo[ col.name]!="" || pVo[ col.name] is XML)
 					{
 						colDefs.push(col.name);
@@ -369,7 +371,7 @@ package com.dehats.air.sqlite
 						params["@p"+i] = pVo[col.name];
 						
 					}
-				}
+//				}
 			}				
 
 			sql+=" ("+colDefs.join(",")+") VALUES ("+ colValues.join(",") +");";
