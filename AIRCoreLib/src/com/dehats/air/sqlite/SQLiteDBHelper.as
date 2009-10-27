@@ -8,13 +8,12 @@ package com.dehats.air.sqlite
 	import flash.data.SQLStatement;
 	import flash.data.SQLTableSchema;
 	import flash.errors.SQLError;
+	import flash.events.EventDispatcher;
 	import flash.filesystem.File;
 	import flash.utils.ByteArray;
 	import flash.utils.getTimer;
 	
-	import mx.controls.Alert;
-	
-	public class SQLiteDBHelper 
+	public class SQLiteDBHelper extends EventDispatcher
 	{
 		
 		private var cnx:SQLConnection;
@@ -26,85 +25,124 @@ package com.dehats.air.sqlite
 		{
 		}
 		
-		// DB
+		/**
+		 * 
+		 * @param pFile
+		 * @param pCryptoKey
+		 */
 
-
-		public function openDBFile(pFile:File, pCryptoKey:ByteArray=null):void
+		public function openDBFile(pFile:File, pCryptoKey:ByteArray=null):Boolean
 		{
 			cnx = new SQLConnection();	
-
-			cnx.open(pFile, SQLMode.CREATE, false, 1024, pCryptoKey);
-
-		}
-		
-		public function reencrypt(pKey:ByteArray):Boolean
-		{
-			var success:Boolean = true;
+			
 			try
 			{
-				cnx.reencrypt(pKey);				
+				cnx.open(pFile, SQLMode.CREATE, false, 1024, pCryptoKey);
 			}
-			catch (error:SQLError)
+			catch(error:SQLError)
 			{
-				success=false;
-				//Alert.show(error.message+"\n"+error.details, "Error");
-			}				
+				dispatchEvent(new SQLiteErrorEvent(SQLiteErrorEvent.EVENT_ERROR, error));
+				return false;
+			}
 			
-			return success;
+			return true;
 		}
 		
+		
+		
+		/**
+		 * 
+		 * @param pKey
+		 */		
+		public function reencrypt(pKey:ByteArray):Boolean
+		{
+			try
+			{
+				cnx.reencrypt(pKey);
+			}
+			catch(error:SQLError)
+			{
+				dispatchEvent(new SQLiteErrorEvent(SQLiteErrorEvent.EVENT_ERROR, error));
+				return false;
+			}
+			//Alert.show("The database could not be re-encrypted, probably because it was not encrypted in the first place. Only databases which were encrypted when created can be re-encrypted.", "Error");
+			
+			return true;
+		}
+
+		
+		/**
+		 * 
+		 * @param pStatement
+		 * @param pParams
+		 * @return 
+		 */
 		// Main routine
 		
 		public function executeStatement(pStatement:String, pParams:Object=null):SQLResult
 		{
-			trace( pStatement)
+			//trace( pStatement)
 			
 			var beforeMS:int = getTimer();
 			
-			var createStmt:SQLStatement = new SQLStatement();
+			var stmt:SQLStatement = new SQLStatement();
 			
-			createStmt.sqlConnection = cnx;
-			createStmt.text = pStatement;
+			stmt.sqlConnection = cnx;
+			stmt.text = pStatement;
 
 			if( pParams)
 			{
 				// copy params
-				for ( var z:String in pParams)  createStmt.parameters[z] = pParams[z];
+				for ( var z:String in pParams)  stmt.parameters[z] = pParams[z];
 			}
 			
 			try
 			{
-			    createStmt.execute();
+				stmt.execute();				
 			}
-			catch (error:SQLError)
+			catch(error:SQLError)
 			{
-				Alert.show(error.message+"\n"+error.details+"\nStatement:\n"+pStatement, "Error");
-			}						
+				dispatchEvent(new SQLiteErrorEvent(SQLiteErrorEvent.EVENT_ERROR, error));
+			}			
 			
 			lastExecutionTime = getTimer()-beforeMS;
 			
-			return createStmt.getResult();
+			return stmt.getResult();
 		}		
 		
 		// Structure
 		
 		public function compact():void
 		{
-			cnx.compact();
+			try
+			{
+				cnx.compact();
+			}
+			catch(error:SQLError)
+			{
+				dispatchEvent(new SQLiteErrorEvent(SQLiteErrorEvent.EVENT_ERROR, error));
+			}				
 		}
+
+
+		/**
+		 * 
+		 * @return 
+		 */
 		
 		public function getSchemas():SQLSchemaResult
 		{
 			
 			try
 			{
-			    cnx.loadSchema();
+				cnx.loadSchema();
 			}
-			catch (error:SQLError)
+			catch(error:SQLError)
 			{
-				Alert.show(error.message+"\n"+error.details);
+				dispatchEvent(new SQLiteErrorEvent(SQLiteErrorEvent.EVENT_ERROR, error));
 				return null;
-			}			
+			}	
+
 			
 			return cnx.getSchemaResult();
 		}
@@ -126,6 +164,7 @@ package com.dehats.air.sqlite
 		public function dropTable(pTable:SQLTableSchema):void
 		{
 			var sql:String = "DROP TABLE "+ pTable.name ;	
+			
 			executeStatement(sql);
 		}
 
@@ -146,15 +185,6 @@ package com.dehats.air.sqlite
 			executeStatement("ALTER TABLE "+ pTable.name+" ADD "+ pColName +" "+ definition);
 		}
 		
-/*
-		// NOT SUPPORTED !
-		
-		public function modifyColumn(pTable:SQLTableSchema, pColName:String, pColDef:String):void
-		{
-			executeStatement("ALTER TABLE " + pTable.name+" MODIFY COLUMN " + pColName +" "+ pColDef);
-		}
-		
-*/			
 
 
 		public function copyTable(pTable:SQLTableSchema, pNewName:String, pCopyData:Boolean=true):void
@@ -333,23 +363,13 @@ package com.dehats.air.sqlite
 			for ( var i:int = 0 ; i < pTable.columns.length ; i++)
 			{
 				var col:SQLColumnSchema = pTable.columns[i] as SQLColumnSchema;
-//				if( ! col.primaryKey)
-//				{					
-					sql+= col.name + " = @p"+i;
-					params["@p"+i] = pVo[ col.name];
-					
-					if(i!=pTable.columns.length-1) sql+=", ";	
-//				}
+				sql+= col.name + " = @p"+i;
+				params["@p"+i] = pVo[ col.name];
+				
+				if(i!=pTable.columns.length-1) sql+=", ";	
 									
 			}				
 
-			// old method using getTablePKName
-			/*
-			var pkName:String = getTablePKName(pTable);
-			sql+=" WHERE "+ pkName +" = '"+ pOldRecord[pkName] +"'";
-			*/
-			
-			// new method using rowid, faster and more secure
 			sql+=" WHERE rowid ="+ pOldRecord["rowid"] ;
 			
 			executeStatement(sql, params);
@@ -372,17 +392,14 @@ package com.dehats.air.sqlite
 
 				var col:SQLColumnSchema = pTable.columns[i] as SQLColumnSchema;
 				
-//				if( ! col.autoIncrement)//primaryKey
-//				{				
-					if(pVo[ col.name]!="" || pVo[ col.name] is XML)
-					{
-						colDefs.push(col.name);
-						
-						colValues.push("@p"+i);
-						params["@p"+i] = pVo[col.name];
-						
-					}
-//				}
+				if(pVo[ col.name]!="" || pVo[ col.name] is XML)
+				{
+					colDefs.push(col.name);
+					
+					colValues.push("@p"+i);
+					params["@p"+i] = pVo[col.name];
+					
+				}
 			}				
 
 			sql+=" ("+colDefs.join(",")+") VALUES ("+ colValues.join(",") +");";
@@ -457,12 +474,6 @@ package com.dehats.air.sqlite
 		{
 			var sql:String = "DELETE FROM " + pTable.name ;
 			
-			// old method
-			/*
-			var pkName:String = getTablePKName(pTable);
-			sql+=" WHERE "+ pkName +" = '"+ pRecord[pkName] +"'";
-			*/
-			// new method using rowid
 			sql+=" WHERE rowid ="+ pRecord["rowid"] ;
 			
 			executeStatement(sql);
